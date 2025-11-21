@@ -431,6 +431,7 @@
 
         let autoScrollInterval = null;
         let scrollSpeed = 2; // pixels per frame
+        let autoScrollAnimationFrame = null;
 
         let files = [];
 
@@ -637,38 +638,25 @@
         }
 
         function startAutoScroll() {
-            // For iOS, we need to use a different approach
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            stopAutoScroll(); // Clear any existing scroll
             
-            if (isIOS) {
-                // iOS requires actual scroll events, not just scrollBy
-                autoScrollInterval = setInterval(() => {
-                    const currentScroll = viewerContent.scrollTop;
-                    const maxScroll = viewerContent.scrollHeight - viewerContent.clientHeight;
-                    
-                    if (currentScroll >= maxScroll - 1) {
-                        stopAutoScroll();
-                        return;
-                    }
-                    
-                    // Force a reflow to ensure iOS processes the scroll
-                    viewerContent.scrollTop = currentScroll + scrollSpeed;
-                    
-                }, 16); // ~60fps
-            } else {
-                autoScrollInterval = setInterval(() => {
-                    viewerContent.scrollBy({
-                        top: scrollSpeed,
-                        behavior: 'auto'
-                    });
-                    
-                    // Stop if reached bottom
-                    if (viewerContent.scrollTop + viewerContent.clientHeight >= viewerContent.scrollHeight - 1) {
-                        stopAutoScroll();
-                    }
-                }, 16); // ~60fps
-            }
+            const scroll = () => {
+                const currentScroll = viewerContent.scrollTop;
+                const maxScroll = viewerContent.scrollHeight - viewerContent.clientHeight;
+                
+                if (currentScroll >= maxScroll - 5) {
+                    stopAutoScroll();
+                    return;
+                }
+                
+                // Direct scroll manipulation works best on iOS
+                viewerContent.scrollTop += scrollSpeed;
+                
+                // Continue animation
+                autoScrollAnimationFrame = requestAnimationFrame(scroll);
+            };
             
+            autoScrollAnimationFrame = requestAnimationFrame(scroll);
             autoScrollBtn.textContent = '⏸️ Pause';
             autoScrollBtn.classList.add('active');
         }
@@ -677,9 +665,13 @@
             if (autoScrollInterval) {
                 clearInterval(autoScrollInterval);
                 autoScrollInterval = null;
-                autoScrollBtn.textContent = '▶️ Auto Scroll';
-                autoScrollBtn.classList.remove('active');
             }
+            if (autoScrollAnimationFrame) {
+                cancelAnimationFrame(autoScrollAnimationFrame);
+                autoScrollAnimationFrame = null;
+            }
+            autoScrollBtn.textContent = '▶️ Auto Scroll';
+            autoScrollBtn.classList.remove('active');
         }
 
         function getFileIcon(type) {
