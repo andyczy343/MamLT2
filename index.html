@@ -217,6 +217,7 @@
             overflow-y: auto;
             overflow-x: hidden;
             scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
 
         .content-container {
@@ -636,17 +637,37 @@
         }
 
         function startAutoScroll() {
-            autoScrollInterval = setInterval(() => {
-                viewerContent.scrollBy({
-                    top: scrollSpeed,
-                    behavior: 'auto'
-                });
-                
-                // Stop if reached bottom
-                if (viewerContent.scrollTop + viewerContent.clientHeight >= viewerContent.scrollHeight - 1) {
-                    stopAutoScroll();
-                }
-            }, 16); // ~60fps
+            // For iOS, we need to use a different approach
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            
+            if (isIOS) {
+                // iOS requires actual scroll events, not just scrollBy
+                autoScrollInterval = setInterval(() => {
+                    const currentScroll = viewerContent.scrollTop;
+                    const maxScroll = viewerContent.scrollHeight - viewerContent.clientHeight;
+                    
+                    if (currentScroll >= maxScroll - 1) {
+                        stopAutoScroll();
+                        return;
+                    }
+                    
+                    // Force a reflow to ensure iOS processes the scroll
+                    viewerContent.scrollTop = currentScroll + scrollSpeed;
+                    
+                }, 16); // ~60fps
+            } else {
+                autoScrollInterval = setInterval(() => {
+                    viewerContent.scrollBy({
+                        top: scrollSpeed,
+                        behavior: 'auto'
+                    });
+                    
+                    // Stop if reached bottom
+                    if (viewerContent.scrollTop + viewerContent.clientHeight >= viewerContent.scrollHeight - 1) {
+                        stopAutoScroll();
+                    }
+                }, 16); // ~60fps
+            }
             
             autoScrollBtn.textContent = '⏸️ Pause';
             autoScrollBtn.classList.add('active');
