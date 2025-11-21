@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4F46E5">
+    <title>File Manager PWA</title>
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkZpbGUgTWFuYWdlciBQV0EiLAogICJzaG9ydF9uYW1lIjogIkZpbGVNZ3IiLAogICJkZXNjcmlwdGlvbiI6ICJVcGxvYWQgYW5kIG1hbmFnZSBmaWxlcyBsb2NhbGx5IiwKICAic3RhcnRfdXJsIjogIi8iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmZmZmZmYiLAogICJ0aGVtZV9jb2xvciI6ICIjNEY0NkU1IiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJyUzRSUzQ3JlY3Qgd2lkdGg9JzEwMCcgaGVpZ2h0PScxMDAnIGZpbGw9JyM0RjQ2RTUnLyUzRSUzQ3RleHQgeD0nNTAnIHk9JzUwJyBmb250LXNpemU9JzUwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBkeT0nLjNlbScgZmlsbD0nd2hpdGUnJTNFRiUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCIKICAgIH0sCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJyUzRSUzQ3JlY3Qgd2lkdGg9JzEwMCcgaGVpZ2h0PScxMDAnIGZpbGw9JyM0RjQ2RTUnLyUzRSUzQ3RleHQgeD0nNTAnIHk9JzUwJyBmb250LXNpemU9JzUwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBkeT0nLjNlbScgZmlsbD0nd2hpdGUnJTNFRiUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsCiAgICAgICJzaXplcyI6ICI1MTJ4NTEyIiwKICAgICAgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCIKICAgIH0KICBdCn0=">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #4F46E5;
+            margin-bottom: 15px;
+        }
+
+        .upload-zone {
+            border: 3px dashed #4F46E5;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+
+        .upload-zone:hover {
+            background: #eff1ff;
+            border-color: #6366F1;
+        }
+
+        .upload-zone.dragover {
+            background: #e0e7ff;
+            border-color: #818CF8;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .file-list {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .file-item {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: background 0.2s;
+        }
+
+        .file-item:hover {
+            background: #f9fafb;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .file-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+
+        .file-meta {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .stats {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .stat-badge {
+            background: #eff6ff;
+            color: #1e40af;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .clear-all {
+            background: #64748b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .clear-all:hover {
+            background: #475569;
+        }
+
+        .slideshow-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+            margin-left: 10px;
+        }
+
+        .slideshow-btn:hover {
+            background: #059669;
+        }
+
+        .fullscreen-viewer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 9999;
+            flex-direction: column;
+        }
+
+        .fullscreen-viewer.active {
+            display: flex;
+        }
+
+        .viewer-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        .content-container {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .file-slide {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
+        .file-slide img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: contain;
+        }
+
+        .file-slide iframe {
+            width: 100%;
+            height: 100vh;
+            border: none;
+            background: white;
+            display: block;
+        }
+
+        .file-slide embed {
+            width: 100%;
+            height: 100vh;
+            border: none;
+            background: white;
+            display: block;
+        }
+
+        .pdf-fallback {
+            width: 100%;
+            height: 100vh;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .pdf-fallback a {
+            background: #4F46E5;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+
+        .file-slide .document-info {
+            color: white;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .viewer-controls {
+            background: rgba(0, 0, 0, 0.95);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            border-top: 1px solid #333;
+        }
+
+        .control-btn {
+            background: #4F46E5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        .control-btn:hover {
+            background: #4338ca;
+        }
+
+        .control-btn.active {
+            background: #10b981;
+        }
+
+        .control-btn.close {
+            background: #ef4444;
+        }
+
+        .control-btn.close:hover {
+            background: #dc2626;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+
+        .speed-control input {
+            width: 150px;
+        }
+
+        .scroll-indicator {
+            color: white;
+            font-weight: 600;
+            padding: 12px 20px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 640px) {
+            .file-item {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .file-preview {
+                width: 100px;
+                height: 100px;
+            }
+
+            .viewer-controls {
+                padding: 15px 10px;
+                gap: 10px;
+            }
+
+            .control-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📁 File Manager PWA</h1>
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">📤</div>
+                <p style="font-weight: 600; margin-bottom: 5px;">Click or drag files here</p>
+                <p style="color: #6b7280; font-size: 14px;">Support for images, PDFs, and documents</p>
+                <input type="file" id="fileInput" multiple accept="image/*,.pdf,.doc,.docx,.txt">
+            </div>
+            <div class="stats">
+                <div class="stat-badge" id="fileCount">0 files</div>
+                <div class="stat-badge" id="totalSize">0 KB</div>
+            </div>
+            <div style="margin-top: 10px;">
+                <button class="clear-all" id="clearAll" style="display: none;">Clear All Files</button>
+                <button class="slideshow-btn" id="slideshowBtn" style="display: none;">🎬 Start Slideshow</button>
+            </div>
+        </div>
+
+        <div class="file-list" id="fileList">
+            <div class="empty-state">
+                <p style="font-size: 48px; margin-bottom: 10px;">📂</p>
+                <p>No files uploaded yet</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Viewer -->
+    <div class="fullscreen-viewer" id="fullscreenViewer">
+        <div class="viewer-content" id="viewerContent">
+            <div class="content-container" id="contentContainer"></div>
+        </div>
+        <div class="viewer-controls">
+            <button class="control-btn" id="scrollTopBtn">⬆️ Scroll to Top</button>
+            <button class="control-btn" id="autoScrollBtn">▶️ Auto Scroll</button>
+            <div class="speed-control">
+                <label for="speedSlider">Speed:</label>
+                <input type="range" id="speedSlider" min="1" max="10" value="3" step="1">
+                <span id="speedValue">Medium</span>
+            </div>
+            <div class="scroll-indicator" id="scrollIndicator">Scroll: 0%</div>
+            <button class="control-btn close" id="closeViewer">✕ Close</button>
+        </div>
+    </div>
+
+    <script>
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const fileCount = document.getElementById('fileCount');
+        const totalSize = document.getElementById('totalSize');
+        const clearAll = document.getElementById('clearAll');
+        const slideshowBtn = document.getElementById('slideshowBtn');
+        const fullscreenViewer = document.getElementById('fullscreenViewer');
+        const viewerContent = document.getElementById('viewerContent');
+        const contentContainer = document.getElementById('contentContainer');
+        const scrollTopBtn = document.getElementById('scrollTopBtn');
+        const autoScrollBtn = document.getElementById('autoScrollBtn');
+        const speedSlider = document.getElementById('speedSlider');
+        const speedValue = document.getElementById('speedValue');
+        const scrollIndicator = document.getElementById('scrollIndicator');
+        const closeViewer = document.getElementById('closeViewer');
+
+        let autoScrollInterval = null;
+        let scrollSpeed = 2; // pixels per frame
+
+        let files = [];
+
+        // Load files from IndexedDB on startup
+        loadFiles();
+
+        // Upload zone click
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+            fileInput.value = '';
+        });
+
+        // Drag and drop
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        // Clear all files
+        clearAll.addEventListener('click', () => {
+            if (confirm('Are you sure you want to delete all files?')) {
+                clearAllFiles();
+            }
+        });
+
+        // Slideshow controls
+        slideshowBtn.addEventListener('click', startSlideshow);
+        closeViewer.addEventListener('click', closeSlideshow);
+        scrollTopBtn.addEventListener('click', scrollToTop);
+        autoScrollBtn.addEventListener('click', toggleAutoScroll);
+        
+        speedSlider.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            scrollSpeed = value * 0.5;
+            
+            const labels = ['Very Slow', 'Slow', 'Slow', 'Medium', 'Medium', 'Medium', 'Fast', 'Fast', 'Very Fast', 'Ultra Fast'];
+            speedValue.textContent = labels[value - 1];
+        });
+
+        // Track scroll position
+        viewerContent.addEventListener('scroll', () => {
+            const scrollTop = viewerContent.scrollTop;
+            const scrollHeight = viewerContent.scrollHeight - viewerContent.clientHeight;
+            const scrollPercent = scrollHeight > 0 ? Math.round((scrollTop / scrollHeight) * 100) : 0;
+            scrollIndicator.textContent = `Scroll: ${scrollPercent}%`;
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (!fullscreenViewer.classList.contains('active')) return;
+            
+            if (e.key === 'Escape') closeSlideshow();
+            else if (e.key === ' ') {
+                e.preventDefault();
+                toggleAutoScroll();
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                scrollToTop();
+            }
+        });
+
+        async function handleFiles(fileList) {
+            for (let file of fileList) {
+                const fileData = {
+                    id: Date.now() + Math.random(),
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    date: new Date().toISOString()
+                };
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    fileData.data = e.target.result;
+                    files.push(fileData);
+                    await saveFile(fileData);
+                    renderFiles();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function renderFiles() {
+            if (files.length === 0) {
+                fileList.innerHTML = `
+                    <div class="empty-state">
+                        <p style="font-size: 48px; margin-bottom: 10px;">📂</p>
+                        <p>No files uploaded yet</p>
+                    </div>
+                `;
+                clearAll.style.display = 'none';
+            } else {
+                fileList.innerHTML = files.map(file => `
+                    <div class="file-item">
+                        <div class="file-preview">
+                            ${file.type.startsWith('image/') 
+                                ? `<img src="${file.data}" alt="${file.name}">` 
+                                : getFileIcon(file.type)}
+                        </div>
+                        <div class="file-info">
+                            <div class="file-name">${file.name}</div>
+                            <div class="file-meta">
+                                ${formatFileSize(file.size)} • ${formatDate(file.date)}
+                            </div>
+                        </div>
+                        <button class="delete-btn" onclick="deleteFile('${file.id}')">Delete</button>
+                    </div>
+                `).join('');
+                clearAll.style.display = 'block';
+            }
+
+            // Update stats
+            fileCount.textContent = `${files.length} file${files.length !== 1 ? 's' : ''}`;
+            const total = files.reduce((sum, f) => sum + f.size, 0);
+            totalSize.textContent = formatFileSize(total);
+            
+            // Show/hide slideshow button
+            slideshowBtn.style.display = files.length > 0 ? 'inline-block' : 'none';
+        }
+
+        function startSlideshow() {
+            if (files.length === 0) return;
+            
+            fullscreenViewer.classList.add('active');
+            
+            // Render all files in sequence
+            contentContainer.innerHTML = files.map((file, index) => {
+                if (file.type.startsWith('image/')) {
+                    return `
+                        <div class="file-slide">
+                            <img src="${file.data}" alt="${file.name}">
+                        </div>
+                    `;
+                } else if (file.type === 'application/pdf') {
+                    // iOS Safari has issues with PDF in iframes, use embed or provide download
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                    if (isIOS) {
+                        return `
+                            <div class="file-slide">
+                                <div class="pdf-fallback">
+                                    <p style="font-size: 64px; margin-bottom: 20px;">📄</p>
+                                    <p style="font-weight: 600; font-size: 20px; margin-bottom: 10px; color: #1f2937;">${file.name}</p>
+                                    <p style="color: #6b7280; margin-bottom: 20px;">${formatFileSize(file.size)}</p>
+                                    <a href="${file.data}" download="${file.name}">Download PDF</a>
+                                    <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">iOS doesn't support inline PDF viewing</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        return `
+                            <div class="file-slide">
+                                <embed src="${file.data}" type="application/pdf">
+                            </div>
+                        `;
+                    }
+                } else {
+                    return `
+                        <div class="file-slide">
+                            <div class="document-info">
+                                <p style="font-size: 64px; margin-bottom: 20px;">${getFileIcon(file.type)}</p>
+                                <p style="font-weight: 600; margin-bottom: 10px;">${file.name}</p>
+                                <p style="color: #9ca3af;">${formatFileSize(file.size)}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+            
+            viewerContent.scrollTop = 0;
+        }
+
+        function closeSlideshow() {
+            fullscreenViewer.classList.remove('active');
+            stopAutoScroll();
+            contentContainer.innerHTML = '';
+        }
+
+        function scrollToTop() {
+            viewerContent.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        function toggleAutoScroll() {
+            if (autoScrollInterval) {
+                stopAutoScroll();
+            } else {
+                startAutoScroll();
+            }
+        }
+
+        function startAutoScroll() {
+            autoScrollInterval = setInterval(() => {
+                viewerContent.scrollBy({
+                    top: scrollSpeed,
+                    behavior: 'auto'
+                });
+                
+                // Stop if reached bottom
+                if (viewerContent.scrollTop + viewerContent.clientHeight >= viewerContent.scrollHeight - 1) {
+                    stopAutoScroll();
+                }
+            }, 16); // ~60fps
+            
+            autoScrollBtn.textContent = '⏸️ Pause';
+            autoScrollBtn.classList.add('active');
+        }
+
+        function stopAutoScroll() {
+            if (autoScrollInterval) {
+                clearInterval(autoScrollInterval);
+                autoScrollInterval = null;
+                autoScrollBtn.textContent = '▶️ Auto Scroll';
+                autoScrollBtn.classList.remove('active');
+            }
+        }
+
+        function getFileIcon(type) {
+            if (type.includes('pdf')) return '📄';
+            if (type.includes('document') || type.includes('word')) return '📝';
+            if (type.includes('text')) return '📃';
+            return '📎';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        async function deleteFile(id) {
+            files = files.filter(f => f.id != id);
+            await removeFile(id);
+            renderFiles();
+        }
+
+        async function clearAllFiles() {
+            files = [];
+            const db = await openDB();
+            const tx = db.transaction('files', 'readwrite');
+            await tx.objectStore('files').clear();
+            renderFiles();
+        }
+
+        // IndexedDB functions
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('FileManagerDB', 1);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('files')) {
+                        db.createObjectStore('files', { keyPath: 'id' });
+                    }
+                };
+            });
+        }
+
+        async function saveFile(file) {
+            const db = await openDB();
+            const tx = db.transaction('files', 'readwrite');
+            await tx.objectStore('files').put(file);
+        }
+
+        async function loadFiles() {
+            const db = await openDB();
+            const tx = db.transaction('files', 'readonly');
+            const store = tx.objectStore('files');
+            const request = store.getAll();
+            
+            request.onsuccess = () => {
+                files = request.result || [];
+                renderFiles();
+            };
+        }
+
+        async function removeFile(id) {
+            const db = await openDB();
+            const tx = db.transaction('files', 'readwrite');
+            await tx.objectStore('files').delete(id);
+        }
+
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('data:application/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgKCkgPT4gc2VsZi5za2lwV2FpdGluZygpKTsKc2VsZi5hZGRFdmVudExpc3RlbmVyKCdhY3RpdmF0ZScsICgpID0+IHNlbGYuY2xpZW50cy5jbGFpbSgpKTsKc2VsZi5hZGRFdmVudExpc3RlbmVyKCdmZXRjaCcsIChlKSA9PiBlLnJlc3BvbmRXaXRoKGZldGNoKGUucmVxdWVzdCkpKTs=');
+        }
+    </script>
+</body>
+</html>
